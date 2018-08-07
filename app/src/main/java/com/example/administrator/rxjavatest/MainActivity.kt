@@ -1,24 +1,29 @@
 package com.example.administrator.rxjavatest
 
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.View
 import io.reactivex.Observable
 import io.reactivex.ObservableOnSubscribe
-import io.reactivex.ObservableSource
+import io.reactivex.Observer
 import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.functions.BiFunction
 import io.reactivex.functions.Consumer
-import io.reactivex.functions.Function
 import io.reactivex.schedulers.Schedulers
 import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
     var TAG = "MainActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+    }
+
+    fun showRxJavaTest(v : View){
         showRxJavaTest()
     }
 
@@ -109,6 +114,99 @@ class MainActivity : AppCompatActivity() {
             Observable.just(data)
         }.subscribe {
             Log.d(TAG,"concatMap 接收到 ${it.toString()}")
+        }
+        //14、buffer
+        //先把发送数据到一个缓冲区域，当数据达到count个的时候在发送一个list集合
+        Observable.just(1,2,3).buffer(1)
+                .subscribe {
+                    Log.d(TAG,"buffer 接收到 ${it.toString()}")
+                }
+        //15、scan
+        //对发送的数据按照函数方法处理后的结果向后通知，并且将得到的结果与再次发送的数据按照函数方法处理后继续向后通知
+        //结果
+        //scan 接收到 1
+        //scan 接收到 3
+        //scan 接收到 6
+        //scan 接收到 10
+        Observable.just(1,2,3,4)
+                .scan { t1: Int, t2: Int ->
+                    t1 + t2
+                }.subscribe {
+                    Log.d(TAG,"scan 接收到 $it")
+                }
+        //16、zip
+        //将多个发送源数据按照函数方法处理后依次发送通知，并且只会处理少的那个数据源
+        //可以用来处理2个请求同时需要的数据
+        var obser1 = Observable.range(1,5)
+        var obser2 = Observable.range(6,15)
+        Observable.zip(obser1,obser2, BiFunction<Int,Int,String> { t1, t2 ->
+            "$t1$t2"
+        }).subscribe {    Log.d(TAG,"zip 接收到 $it") }
+        //17、take
+        Observable.just("1",2,3,"4")
+                .take(3)
+                .subscribe {    Log.d(TAG,"take 接收到 $it") }
+        //18、skip
+        //skip(n)操作符，会跳过前n个结果
+        Observable.just(1,2,3,4)
+                .skip(2)
+                .subscribe { Log.d(TAG,"skip 接收到 $it")  }
+
+        //19、replay
+        //relay(n)，使得即使在未订阅时，被订阅者已经发射了数据，订阅者也可以收到被订阅者在订阅之前最多n个数据。
+        var connectableObservable = Observable.create<String> {
+            it.onNext("start")
+            it.onNext("second")
+            it.onNext("thread")
+            it.onComplete()
+        }.replay(2)
+        connectableObservable.connect()
+        connectableObservable.subscribe(object : Observer<String>{
+            override fun onComplete() {
+                Log.d(TAG,"onComplete...")
+            }
+
+            override fun onSubscribe(d: Disposable) {
+            }
+
+            override fun onNext(t: String) {
+                Log.d(TAG,"onNext...$t")
+            }
+
+            override fun onError(e: Throwable) {
+            }
+
+        })
+        connectableObservable.subscribe { Log.d(TAG, "replay 接收到 $it") }
+
+        //20、concat
+        Observable.concat(obser1,obser2).subscribe { Log.d(TAG, "concat 接收到 $it") }
+
+//        val just1 = Observable.just(1, 2, 3)
+//        val just2 = Observable.just(4, 5, 6)
+//        Observable.concat(just1,just2).subscribe {  Log.d(TAG, "concat 接收到 $it")  }
+
+        //21、merge和concat类似
+        //merge和concat类似，也是用来连接两个被订阅者，但是它不保证两个被订阅发射数据的顺序。
+
+        //22、throttleFirst
+        //结果 1
+        Observable.just(1,2,3)
+                .throttleFirst(1,TimeUnit.SECONDS)
+                .subscribe { Log.d(TAG, "throttleFirst 接收到 $it")  }
+        //23、throttleLast
+
+        //24、debounce
+        //结果 3
+        Observable.just(1,2,3).debounce(1,TimeUnit.SECONDS)
+                .subscribe {  Log.d(TAG, "debounce 接收到 $it")   }
+
+        //25、window
+//        Observable.just(1,2,3).window(3).subscribe {
+//            it.subscribe {  Log.d(TAG, "window 接收到 $it") }
+//        }
+        Observable.just(1,2,3).window(1,TimeUnit.SECONDS).subscribe {
+            it.subscribe {  Log.d(TAG, "window 接收到 $it") }
         }
     }
 
