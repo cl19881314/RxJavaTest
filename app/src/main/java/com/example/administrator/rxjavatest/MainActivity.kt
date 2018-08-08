@@ -208,6 +208,16 @@ class MainActivity : AppCompatActivity() {
         Observable.just(1,2,3).window(1,TimeUnit.SECONDS).subscribe {
             it.subscribe {  Log.d(TAG, "window 接收到 $it") }
         }
+
+        //26、switchMap
+        //当上一个任务尚未完成时，就开始下一个任务的话，上一个任务就会被取消掉
+        //Schedulers.newThread()就会取消掉之前的数据
+        //同一个线程的话和concatMap一样
+        //结果 switchMap 接收到 4
+        Observable.just(1,2,3,4)
+                .switchMap {
+                    Observable.just("改变数据$it").subscribeOn(Schedulers.newThread())
+                }.subscribe { Log.d(TAG, "switchMap 接收到 $it")   }
     }
 
 }

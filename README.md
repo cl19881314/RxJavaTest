@@ -107,7 +107,9 @@ throttleFirst用来解决抖动的问题，我们可以设置一段时间，之�
 ##### 23、throttleLast
 ##### 24、debounce
 Observable.debounce(float value, Unit unit)，dounce，被订阅者在收到要发射消息的指令后，会等待一段时间，如果在这段时间内没有新的消息发射指令，那么它会发射这条消息，否则它会丢弃掉它，从这个新收到的值开始重新等待设置的时间长度。
-##### window
+##### 25、window
 window(n,TimeUnit.SECONDS)每隔ns集中发射这段时间内的数据，而不是一有数据就发射。
 window(n) 类似buffer
+##### 26、SwitchMap
+当上一个任务尚未完成时，就开始下一个任务的话，上一个任务就会被取消掉。如果，都是在同一个线程里跑的话。那么，这个操作符与ConcatMap就无异了，都是先跑的先到。只有在不同的线程里跑的时候，即线程方案为newThread的时候。才会出现这种情况。
 
